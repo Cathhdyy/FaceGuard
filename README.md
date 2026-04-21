@@ -32,20 +32,40 @@ FaceGuard v2.0 is a complete ground-up rebuild of the original FaceGuard01 archi
 -   **Hybrid Detection**: Flexible support for **Haar Cascade** (Fast), **HOG** (Balanced), and **CNN** (Precise) models.
 -   **Security Overlay**: Live CAP/PROC/DET performance metrics and color-coded security boxes.
 
-## 🛠️ Quick Start (Windows)
+## 🛠️ Installation & Setup (Windows)
 
-1.  **Installation**:
-    -   Ensure you have **Python 3.10+** and **CMake** installed.
-    -   Install dependencies:
-        ```bash
-        pip install -r requirements.txt
-        ```
+Follow these steps to get FaceGuard up and running on your machine:
 
-2.  **Launch**:
-    -   Simply double-click **`run_FaceGuard.bat`**. This will automatically handle environment setup and start the server.
+### 1. Prerequisites
+- **Python 3.10+**: Ensure Python is installed and added to your system PATH.
+- **CMake**: Required for `dlib` compilation. [Download here](https://cmake.org/download/).
+- **Conda (Optional but Recommended)**: The project is optimized for Conda environments.
 
-3.  **Access Dashboard**:
-    -   Open your browser to `http://localhost:5001`.
+### 2. Environment Setup
+We recommend using a dedicated environment to avoid dependency conflicts:
+```powershell
+# Create a new environment
+conda create -n faceguard_env python=3.10
+
+# Activate the environment
+conda activate faceguard_env
+```
+
+### 3. Install Dependencies
+Install the high-performance AI libraries required for the Nitro engine:
+```powershell
+pip install -r requirements.txt
+```
+
+### 4. Running the Application
+The project includes a one-click launcher for convenience:
+- **Option A (Launcher)**: Simply double-click the **`run_FaceGuard.bat`** file in the root directory.
+- **Option B (Manual)**: Run the following command from your terminal:
+  ```powershell
+  python src2/app.py
+  ```
+
+Once started, open your browser and navigate to: **`http://localhost:5001`**
 
 ## 📂 Project Structure
 
