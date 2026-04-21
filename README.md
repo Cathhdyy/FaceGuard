@@ -17,13 +17,13 @@ FaceGuard v2.0 is a complete ground-up rebuild of the original FaceGuard01 archi
 
 | Feature | FaceGuard v1.0 (Legacy) | FaceGuard v2.0 (Nitro) |
 | :--- | :--- | :--- |
-| **Video Playback** | 10-15 FPS (Laggy) | **30 FPS (Silky Smooth)** |
-| **Pipeline** | Synchronous (AI blocks video) | **4-Stage Async (Decoupled)** |
-| **Camera Backend** | DirectShow (Legacy Windows) | **MSMF (Media Foundation)** |
-| **Face Matching** | Linear Python Loops | **FAISS (C++ Optimized)** |
-| **AI Training** | Single-core (Slow) | **Multi-core Parallel (6x Faster)** |
-| **Model Updates** | Manual Restart Required | **Hot-Reloading (Live Training)** |
-| **UI Feedback** | Static Text Overlays | **Dynamic Bento-Dashboard** |
+| **Video Playback** | 15 FPS (Laggy) | **30 FPS (Silky Smooth)** |
+| **Search Engine** | KNN Linear Search | **FAISS Vector Search** |
+| **Pipeline** | Synchronous (AI blocks video) | **Asynchronous (Nitro)** |
+| **Camera Backend** | DirectShow (Legacy) | **MSMF (Modern)** |
+| **AI Training** | Manual Single-core | **Parallel Multi-core** |
+| **Model Updates** | Manual Restart Required | **Live In-Dashboard Training** |
+| **User Interface** | Basic Sidebar Layout | **Premium Bento-Grid Dashboard** |
 
 ## 📊 Core Capabilities
 
