@@ -11,6 +11,20 @@ A high-performance, real-time facial recognition and emotion analysis system. Po
 -   **Live Face Training**: Register and train unknown faces directly from the live dashboard without stopping the stream.
 -   **Dynamic Resource Guarding**: Smart CPU allocation that reserves cores for video stability even during heavy model retraining.
 
+## 📈 Major Architectural Evolutions (vs v1.0)
+
+FaceGuard v2.0 is a complete ground-up rebuild of the original FaceGuard01 architecture, focused on eliminating latency and maximizing hardware utilization.
+
+| Feature | FaceGuard v1.0 (Legacy) | FaceGuard v2.0 (Nitro) |
+| :--- | :--- | :--- |
+| **Video Playback** | 10-15 FPS (Laggy) | **30 FPS (Silky Smooth)** |
+| **Pipeline** | Synchronous (AI blocks video) | **4-Stage Async (Decoupled)** |
+| **Camera Backend** | DirectShow (Legacy Windows) | **MSMF (Media Foundation)** |
+| **Face Matching** | Linear Python Loops | **FAISS (C++ Optimized)** |
+| **AI Training** | Single-core (Slow) | **Multi-core Parallel (6x Faster)** |
+| **Model Updates** | Manual Restart Required | **Hot-Reloading (Live Training)** |
+| **UI Feedback** | Static Text Overlays | **Dynamic Bento-Dashboard** |
+
 ## 📊 Core Capabilities
 
 -   **Face Recognition**: High-accuracy identification using KNN and Dlib descriptors.
