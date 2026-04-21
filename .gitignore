@@ -1,0 +1,15 @@
+venv/
+venv_clean/
+venv_faceguard/
+__pycache__/
+*.pyc
+.env
+*.log
+*.clf
+*.index
+*_labels.pkl
+training_cache.pkl
+diagnostic_frame.jpg
+uploads/
+training_data/*/
+!training_data/.gitkeep

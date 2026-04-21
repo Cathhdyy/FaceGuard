@@ -1,0 +1,6 @@
+{
+    "python.defaultInterpreterPath": "C:\\Users\\sansk\\miniconda3\\envs\\faceguard_env\\python.exe",
+    "python.analysis.extraPaths": [
+        "./src2"
+    ]
+}
