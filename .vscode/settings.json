@@ -1,6 +1,7 @@
 {
-    "python.defaultInterpreterPath": "C:\\Users\\sansk\\miniconda3\\envs\\faceguard_env\\python.exe",
+    "python.defaultInterpreterPath": "c:\\Users\\Maniraj Sharma\\OneDrive\\Documents\\Sanskar\\FaceGuard\\venv\\Scripts\\python.exe",
     "python.analysis.extraPaths": [
-        "./src2"
+        "./src2",
+        "c:\\Users\\Maniraj Sharma\\OneDrive\\Documents\\Sanskar\\FaceGuard\\venv\\Lib\\site-packages"
     ]
 }

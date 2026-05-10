@@ -78,6 +78,25 @@ function updateStats() {
                     emotionsContainer.appendChild(tag);
                 });
             }
+
+            // Update Distances List
+            const distancesContainer = document.getElementById('distances-list');
+            if (distancesContainer) {
+                distancesContainer.innerHTML = '';
+                if (!data.distances || data.distances.length === 0) {
+                    distancesContainer.innerHTML = '<span class="placeholder">Measuring...</span>';
+                } else {
+                    data.distances.forEach(distance => {
+                        const tag = document.createElement('span');
+                        tag.className = 'name-tag';
+                        tag.style.background = 'rgba(155, 89, 182, 0.2)'; // purple tint
+                        tag.style.color = '#9b59b6';
+                        tag.style.borderColor = '#9b59b6';
+                        tag.textContent = distance > 0 ? `${distance.toFixed(1)}m` : 'Measuring...';
+                        distancesContainer.appendChild(tag);
+                    });
+                }
+            }
         })
         .catch(err => console.error(err));
 }

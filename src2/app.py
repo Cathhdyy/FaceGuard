@@ -1,18 +1,25 @@
+# pyrefly: ignore [missing-import]
 from flask import Flask, render_template, Response, jsonify, request, send_file
+# pyrefly: ignore [missing-import]
 from werkzeug.utils import secure_filename
 from camera import VideoCamera
 import os
 import subprocess
+# pyrefly: ignore [missing-import]
 import cv2
+# pyrefly: ignore [missing-import]
 import dlib
 import pickle
 import numpy as np
 import threading
+# pyrefly: ignore [missing-import]
 import faiss
 from train_model import train_face_recognition_model
 import datetime
 import time
 from emotion_detector import EmotionDetector
+# pyrefly: ignore [missing-import]
+import psutil
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -22,6 +29,7 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'bmp', 'mp4', 'avi', 'mov', 'mkv'}
 camera = None
 
 # Paths for recognition
+# pyrefly: ignore [missing-import]
 import face_recognition_models
 
 # Paths for recognition - dynamically loaded
@@ -258,6 +266,7 @@ def stats():
         'faces':            len(preds),
         'names':            [p[0] for p in preds],
         'emotions':         [p[3] for p in preds],
+        'distances':        [p[4] for p in preds],
         'frame_count':      cam.frame_count,
         'processing_count': cam.last_predictions_count,
         'capture_fps':      cam.fps,
@@ -300,6 +309,13 @@ def retrain():
     def do_retrain():
         print("[ADMIN] Starting background retraining...")
         try:
+            # OPTIMIZATION: Set low priority so camera feed doesn't stutter
+            p = psutil.Process(os.getpid())
+            if os.name == 'nt':
+                p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
+            else:
+                p.nice(10) # Nice 10 for Unix
+                
             # Fix: Use absolute paths so it works regardless of CWD
             base_path = os.path.dirname(os.path.abspath(__file__))
             train_dir = os.path.join(base_path, "training_data")
@@ -315,6 +331,12 @@ def retrain():
                 get_camera().reload_models()
             else:
                 print("[ADMIN] Retraining failed to find data or encode faces.")
+                
+            # Restore priority
+            if os.name == 'nt':
+                p.nice(psutil.NORMAL_PRIORITY_CLASS)
+            else:
+                p.nice(0)
         except Exception as e:
             print(f"[ADMIN] Retraining error: {e}")
 

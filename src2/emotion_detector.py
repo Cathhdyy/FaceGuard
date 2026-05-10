@@ -1,3 +1,4 @@
+# pyrefly: ignore [missing-import]
 import cv2
 import numpy as np
 import os
@@ -11,34 +12,55 @@ class EmotionDetector:
             base_dir = os.path.dirname(os.path.abspath(__file__))
             model_path = os.path.join(base_dir, "emotion-ferplus-8.onnx")
             
-        self.net = None
+        self.session = None
         if os.path.exists(model_path):
             try:
-                self.net = cv2.dnn.readNetFromONNX(model_path)
-                print(f"[OK] Emotion model loaded from {model_path}")
+# pyrefly: ignore [missing-import]
+                import onnxruntime as ort
+                
+                # Configure Providers
+                providers = [
+                    ('CUDAExecutionProvider', {
+                        'device_id': 0,
+                        'arena_extend_strategy': 'kSameAsRequested',
+                        'gpu_mem_limit': 2 * 1024 * 1024 * 1024,
+                        'cudnn_conv_algo_search': 'DEFAULT',
+                        'do_copy_in_default_stream': True,
+                    }),
+                    'CPUExecutionProvider',
+                ]
+                
+                self.session = ort.InferenceSession(model_path, providers=providers)
+                current_providers = self.session.get_providers()
+                
+                if 'CUDAExecutionProvider' in current_providers:
+                    print(f"[NITRO-GPU] ONNX CUDA Acceleration Enabled for Emotions")
+                else:
+                    print(f"[NITRO-CPU] Running Emotions on CPU (ONNX)")
+                
+                print(f"[OK] Emotion model loaded via ONNX from {model_path}")
             except Exception as e:
-                print(f"[ERR] Error loading emotion model: {e}")
+                print(f"[ERR] Error loading emotion model via ONNX: {e}")
+                self.session = None
         else:
             print(f"[ERR] Emotion model not found at {model_path}")
 
     def detect_emotion(self, face_image):
-        if self.net is None or face_image is None or face_image.size == 0:
+        if self.session is None or face_image is None or face_image.size == 0:
             return "Unknown", 0.0
 
         try:
             # Preprocessing for FerPlus
-            # 1. Grayscale
             gray = cv2.cvtColor(face_image, cv2.COLOR_BGR2GRAY)
+            resized = cv2.resize(gray, (64, 64)).astype(np.float32)
             
-            # 2. Resize to 64x64
-            resized = cv2.resize(gray, (64, 64))
+            # Input needs to be 1x1x64x64
+            input_tensor = resized.reshape(1, 1, 64, 64)
             
-            # 3. Preprocess for DNN
-            # FerPlus expects 1x1x64x64 input
-            blob = cv2.dnn.blobFromImage(resized, 1.0, (64, 64), (0, 0, 0), swapRB=False, crop=False)
-            
-            self.net.setInput(blob)
-            scores = self.net.forward()[0]
+            # Run Inference
+            input_name = self.session.get_inputs()[0].name
+            outputs = self.session.run(None, {input_name: input_tensor})
+            scores = outputs[0][0]
             
             # Softmax
             scores = np.exp(scores - np.max(scores))

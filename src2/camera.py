@@ -1,9 +1,12 @@
+# pyrefly: ignore [missing-import]
 import cv2
 import pickle
 import os
 import numpy as np
 import time
+# pyrefly: ignore [missing-import]
 import face_recognition
+# pyrefly: ignore [missing-import]
 import faiss
 from emotion_detector import EmotionDetector
 import threading
@@ -107,7 +110,7 @@ class VideoCamera(object):
         self.stopped        = False
         self.current_backend = "Checking..."
         self.warmup_progress = 0
-        self.process_nth_frame = 2 # Process every 2nd frame for massive performance boost
+        self.process_nth_frame = 2 # Process every 2nd frame for detection (cuts CPU load by 50%)
         
         # Internal Metrics
         self._perf_detect_ms = 0
@@ -205,7 +208,7 @@ class VideoCamera(object):
 
     # ── T2: Detect (Nitro Mode) ────────────────────────────────────
     def _detect_thread(self):
-        SCALE = 0.25
+        SCALE = 0.20
         last_id = -1
         proc_ctr = 0
         t_proc = time.time()
@@ -252,7 +255,11 @@ class VideoCamera(object):
                     self.processing_fps = round(proc_ctr / dt, 1)
                     proc_ctr, t_proc = 0, time.time()
             except: pass
-            time.sleep(0.001)
+            
+            # FPS Lock: Target 15 FPS (0.0667s per frame)
+            delay = 0.0667 - (time.time() - t_det)
+            if delay > 0:
+                time.sleep(delay)
 
     # ── T3: Recognition (Fully Async) ──────────────────────────────
     def _recog_thread(self):
@@ -281,18 +288,21 @@ class VideoCamera(object):
                 rgb_frame = frame[:, :, ::-1]
                 rgb_frame = np.ascontiguousarray(rgb_frame)
                 
-                # In Nitro-Optimized mode, we prioritize the primary (largest) face
-                # Sort by area to ensure the most important subject is recognized first
+                # In Nitro-Optimized mode, we prioritize the primary faces
+                # Sort by area to ensure the most important subjects are recognized first
                 locs.sort(key=lambda l: (l[1]-l[3])*(l[2]-l[0]), reverse=True)
-                test_locs = locs[:1] 
+                
+                # OPTIMIZATION: Process up to 4 faces in a BATCH for efficiency
+                MAX_RECOG_FACES = 4
+                test_locs = locs[:MAX_RECOG_FACES]
                 encodings = []
                 
-                if faiss_index:
+                if faiss_index and test_locs:
                     try:
-                        # face_recognition expects (top, right, bottom, left)
+                        # face_recognition.face_encodings is much faster when called once on a list of locations
                         encodings = face_recognition.face_encodings(rgb_frame, test_locs)
                     except Exception as e:
-                        print(f"[NITRO-RECOG] Encoding Error: {e}")
+                        print(f"[NITRO-RECOG] Batch Encoding Error: {e}")
 
                 for i, loc in enumerate(test_locs):
                     name, conf, emo = "Unknown", 0.0, "Neural"
@@ -307,7 +317,7 @@ class VideoCamera(object):
                             dist = distances[0][0]
                             idx = indices[0][0]
                             
-                            # Standard face_recognition threshold is ~0.4-0.6 (Squared L2)
+                            # Standard face_recognition threshold is ~0.45 (Squared L2)
                             is_match = dist <= 0.45 
                             
                             if is_match and idx in faiss_labels:
@@ -335,7 +345,7 @@ class VideoCamera(object):
                     self._recog_locs = locs
                     self.last_predictions_count += 1
                 
-                time.sleep(0.6) # Increased to 1.6 FPS recognition for better Video FPS stability
+                time.sleep(1.0) # Throttle recognition to 1 FPS to prevent starving the video render thread
             except Exception as e: 
                 print(f"[NITRO-RECOG] Thread Error: {e}")
                 time.sleep(0.5)
@@ -370,12 +380,20 @@ class VideoCamera(object):
                             if j < len(res): name, _, emo = res[j]
                             break
 
+                    # Distance Calculation (Triangle Similarity)
+                    pixel_width = loc[1] - loc[3]
+                    dist_str = ""
+                    if pixel_width > 0:
+                        # Assuming 14cm face width and ~600px focal length
+                        distance_m = (14.0 * 600.0) / pixel_width / 100.0
+                        dist_str = f" | {distance_m:.1f}m"
+
                     # Dynamic Color: Green if identified, Red if Unknown, Scanning or Analyzing
                     is_identified = name not in ["Unknown", "Scanning", "Analyzing...", "Scanning..."]
                     color = (0, 255, 0) if is_identified else (0, 0, 255) # BGR: Green (Identified) vs Red (Unauthorized)
                     
                     cv2.rectangle(frame, (loc[3], loc[0]), (loc[1], loc[2]), color, 2)
-                    cv2.putText(frame, f"{name} | {emo}", (loc[3], loc[0]-10), cv2.FONT_HERSHEY_DUPLEX, 0.5, color, 1)
+                    cv2.putText(frame, f"{name} | {emo}{dist_str}", (loc[3], loc[0]-10), cv2.FONT_HERSHEY_DUPLEX, 0.5, color, 1)
 
                 # Performance Label
                 perf_text = f"CAP:{self.fps} | PROC:{self.processing_fps} | DET:{self._perf_detect_ms}ms"
@@ -429,7 +447,13 @@ class VideoCamera(object):
         preds = []
         for i, loc in enumerate(locs):
             name, conf, emo = (res[i] if i < len(res) else ("Unknown", 0.0, "Neutral"))
-            preds.append((name, loc, conf, emo, 0.0))
+            
+            distance_m = 0.0
+            pixel_width = loc[1] - loc[3]
+            if pixel_width > 0:
+                distance_m = (14.0 * 600.0) / pixel_width / 100.0
+                
+            preds.append((name, loc, conf, emo, round(distance_m, 2)))
         return preds
 
     def set_model(self, model_type):
