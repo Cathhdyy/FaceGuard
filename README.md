@@ -10,6 +10,17 @@ A high-performance, real-time facial recognition and emotion analysis system. Po
 -   **Turbo Training**: Parallelized background training that engages **all logical CPU cores**, reducing model update times by up to 6x.
 -   **Live Face Training**: Register and train unknown faces directly from the live dashboard without stopping the stream.
 -   **Dynamic Resource Guarding**: Smart CPU allocation that reserves cores for video stability even during heavy model retraining.
+-   **Distance Tracking**: Real-time distance estimation using the Triangle Similarity method (v2.1).
+-   **GPU Acceleration**: Offloaded heavy emotion detection to **NVIDIA CUDA** via ONNX Runtime (v2.1).
+
+## 📅 Latest Updates
+
+- **May 10, 2026**: 
+  - Integrated **Distance to Camera** tracking with live HUD overlays.
+  - Enabled **GPU CUDA Acceleration** for the Emotion Detection pipeline.
+  - Implemented **Batch Recognition** (processing up to 4 faces simultaneously).
+  - Optimized the **Nitro Engine** with a 15 FPS hardware lock for maximum stability on mid-range systems.
+  - Fixed IDE stability issues and suppressed false-positive import warnings.
 
 ## 📈 Major Architectural Evolutions (vs v1.0)
 
